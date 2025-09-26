@@ -1,0 +1,31 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "CloudFrontGetObject",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "cloudfront.amazonaws.com"
+        },
+        "Action": [ 
+                    "s3:GetObject", 
+                    "s3:PutObject" 
+                  ],
+        "Resource": "arn:aws:s3:::${bucket}/*",
+        "Condition": {
+          "StringEquals": {
+            "AWS:SourceArn": "${cloudfront}"
+          }
+        }
+      },
+      {
+        "Sid": "AWSTerraformSPNAllAccess",
+        "Effect": "Allow",
+        "Principal": {
+            "AWS": "${AWSTERRAFORMSPN}"
+        },
+        "Action": "s3*",
+        "Resource": "arn:aws:s3:::${bucket}/*"
+      }
+    ]
+  }
