@@ -76,10 +76,10 @@ module "DNS_deployment" {
   domain_name     = var.domain_name
   zone_id         = var.hosted_zone_id
   
-  root_s3_distribution_domain_name    = module.S3_website_deployment[0].root_cloudfront_domain_name
-  root_s3_distribution_hosted_zone_id = module.S3_website_deployment[0].root_cloudfront_hosted_zone_id
-  www_s3_distribution_domain_name     = module.S3_website_deployment[0].www_cloudfront_domain_name 
-  www_s3_distribution_hosted_zone_id  = module.S3_website_deployment[0].www_cloudfront_hosted_zone_id
+  root_s3_distribution_domain_name    = module.S3_website_deployment.root_cloudfront_domain_name
+  root_s3_distribution_hosted_zone_id = module.S3_website_deployment.root_cloudfront_hosted_zone_id
+  www_s3_distribution_domain_name     = module.S3_website_deployment.www_cloudfront_domain_name 
+  www_s3_distribution_hosted_zone_id  = module.S3_website_deployment.www_cloudfront_hosted_zone_id
 }
 
 module "S3_website_deployment" {

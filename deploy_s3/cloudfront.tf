@@ -57,28 +57,30 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
     }
 
     viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 31536000
-    default_ttl            = 31536000
-    max_ttl                = 31536000
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
     compress               = true
   }
+  price_class = "PriceClass_100"
 
   restrictions {
     geo_restriction {
-      restriction_type = "none"
+      restriction_type = "blacklist"
+      locations        = ["AL", "BA", "BG", "HR", "GR", "ME", "MK", "RO", "RS", "SI", "RU", "CN", "HK", "MO", "TW", "KP", "BY", "IR", "SY", "CU", "VE", "SD", "LY", "IQ", "AF", "YE"]
     }
   }
 
   viewer_certificate {
     acm_certificate_arn      = var.acm_cert
     ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.1_2016"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = "${merge(
     var.common_tags,
     tomap({
-      "Name" = "octocloudfrontarm",
+      "Name" = "finoptrix-frontend",
     })
   )}" 
 }
@@ -94,46 +96,47 @@ resource "aws_cloudfront_distribution" "www_s3_distribution" {
 # Cloudfront S3 for redirect to www
 resource "aws_cloudfront_distribution" "root_s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.root_bucket.bucket_domain_name # aws_s3_bucket.root_bucket.bucket_regional_domain_name 
-    origin_access_control_id = aws_cloudfront_origin_access_control.s3_oac.id
-    origin_id   = "S3-${var.domain_name}"
+    domain_name = aws_s3_bucket_website_configuration.root_bucket_config.website_endpoint
+    origin_id   = "redirect-origin"
 
-    # custom_origin_config {
-    #   http_port              = 80
-    #   https_port             = 443
-    #   origin_protocol_policy = "http-only"
-    #   origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
-    # }
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   enabled         = true
   is_ipv6_enabled = true
+  comment         = "Redirect finoptrix.com -> www.finoptrix.com"
 
   aliases = [var.domain_name]
 
   default_cache_behavior {
+    target_origin_id       = "redirect-origin"
+    viewer_protocol_policy = "redirect-to-https"
+
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${var.domain_name}"
 
     forwarded_values {
-      query_string = true
-
+      query_string = false
       cookies {
         forward = "none"
       }
-
-      headers = ["Origin"]
     }
 
-    viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 86400
-    max_ttl                = 31536000
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
   }
+
+  price_class = "PriceClass_100"
 
   restrictions {
     geo_restriction {
+      locations = []
       restriction_type = "none"
     }
   }
@@ -141,8 +144,13 @@ resource "aws_cloudfront_distribution" "root_s3_distribution" {
   viewer_certificate {
     acm_certificate_arn      = var.acm_cert
     ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.1_2016"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
-  tags = var.common_tags
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "finoptrix-root-redirect"
+    }
+  )
 }

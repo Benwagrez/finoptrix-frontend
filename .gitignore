@@ -3,6 +3,11 @@
 
 frontend/*
 
+.terraform/*
+.terraform
+
+.terraform.lock.hcl
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
